@@ -1,17 +1,21 @@
-
+/**
+ * Simple blocking, auto-baud capable, 1/2-wire UART driver for PIC16(L)F1919x.
+*/
 #include <xc.h>
-#include <string.h>
-
 #include "uart.h"
 
 void uart_init(void)
 {
-    // SP1BRGL = 68;
-    // SP1BRGL = 0x0;
-    // SP1BRGH = 0x0;
+    // Configure PPS module. This will set the associated TRIS bits for us.
+    UART_RX_PPS_REG = UART_RX_PPS_VAL;
+    UART_TX_PPS_REG = UART_TX_PPS_VAL;
+
+    // Configure EUSART1 module.
     RC1STAbits.SPEN = 1;    // Enable serial port
     RC1STAbits.CREN = 1;    // Enable Continuos Receive (RX)
+#ifndef UART_ONE_WIRE   // Only enable transmit in 2-wire mode
     TX1STAbits.TXEN = 1;    // Enable Transmit (TX)
+#endif
     BAUD1CONbits.BRG16 = 1; // Set BRG to use 16 bits
     TX1STAbits.BRGH = 1;    // Select high speed baudrate
 }
@@ -34,40 +38,26 @@ uart_sync (void)
     // Read our trash value to clear interrupt flag
     sync_trash = RC1REG;
 
+#if 0
     // Make sure we didn't overflow
-    // if (BAUD1CONbits.ABDOVF)
-    // {
-    //     while (BAUD1CONbits.RCIDL == 0)
-    //     {
-    //         // Wait for the fifth rising edge of the sync character.
-    //         sync_trash = RC1REG;
-    //     }
+    if (BAUD1CONbits.ABDOVF)
+    {
+        while (BAUD1CONbits.RCIDL == 0)
+        {
+            // Wait for the fifth rising edge of the sync character.
+            sync_trash = RC1REG;
+        }
 
-    //     // Clear overflow bit
-    //     BAUD1CONbits.ABDOVF = 0;
+        // Clear overflow bit
+        BAUD1CONbits.ABDOVF = 0;
 
-    //     // Hang
-    //     while (1)
-    //     {
-    //         CLRWDT();
-    //     }
-    // }
-
-    // if (!SP1BRGL | SP1BRGH)
-    // {
-    //     while(1)
-    //     {
-    //         CLRWDT();
-    //     }
-    // }
-
-    // unsigned int baudrate = SP1BRGH << 8 | SP1BRGL;
-
-    // baudrate = baudrate << 2;
-
-    // SP1BRGH = (baudrate << 8) & 0xF0;
-    // SP1BRGL = baudrate & 0x0F;
-    
+        // Hang
+        while (1)
+        {
+            CLRWDT();
+        }
+    }
+#endif
 
     // Subtract one from SP1BRGH:SP1BRGL register pair
     if (SP1BRGL)
@@ -94,16 +84,42 @@ uart_deinit (void)
     TX1STA = 0;
     SP1BRGL = 0;
     SP1BRGH = 0;
+
+    // TODO: PPS registers
 }
 
 void uart_write(uint8_t data)
 {
-    while(!TX1STAbits.TRMT)
+#ifdef UART_ONE_WIRE
+    TX1STAbits.TXEN = 1;    // Enable Transmit (TX)
+#else
+    while (!TX1STAbits.TRMT)
     {
-        // Transmit register full, wait for room.
+        // Wait for transmit register to be empty
+    }
+#endif
+
+    // Write byte to transmit register
+    TX1REG = data;
+
+#ifdef UART_ONE_WIRE
+    // These two empty while loops wait for the packet to be sent by waiting
+    // for it to be received. The RCIDL bit is cleared while receiving.
+    while (BAUD1CONbits.RCIDL)
+    {
+        // wait for start bit
+        CLRWDT();
+    }
+    while (!BAUD1CONbits.RCIDL)
+    {
+        // wait to finish receiving byte sent
+        CLRWDT();
     }
 
-    TX1REG = data;
+    data = RC1REG; // Read back sent byte
+
+    TX1STAbits.TXEN = 0;    // Disable Transmit (TX)
+#endif
 }
 
 unsigned char
@@ -112,64 +128,11 @@ uart_read (void)
     while (!PIR3bits.RC1IF)
     {
         // Wait for interrupt flag to signify a byte has been received.
+        CLRWDT();
     }
 
     return RC1REG;
 }
 
 
-#if 0
-void uart_print(char *data)
-{
-    while (*data) {
-        uart_write((uint8_t)*data++);
-    }
-}
-
-void uart_println(char *data)
-{
-    uint8_t newline = '\n';
-    uint8_t carrige = '\r';
-    while (*data) {
-        uart_write((uint8_t)*data++);
-        _delay(225);
-    }
-    uart_write(carrige);
-    _delay(225);
-    uart_write(newline);
-        _delay(225);
-}
-
-void uart_printhex(uint8_t data)
-{
-
-    uint8_t msc = (data & 0xF0) >> 4;
-    uint8_t lsc = data & 0x0F;
-
-    if (msc <= 0x09) {
-        msc += 48;  // Ascii chars 0-9
-    } 
-    else if (msc <= 0x0F) {
-        msc  += 55; // asci chars A-F
-    }
-    else {
-        msc = 63; // Error gets a question mark
-    }
-    
-    if (lsc <= 0x09) {
-        lsc += 48;  // Ascii chars 0-9
-    } 
-    else if (lsc <= 0x0F) {
-        lsc  += 55; // asci chars A-F
-    }
-    else {
-        lsc = 63; // Error gets a question mark
-    }
-
-    uart_write(msc);
-    _delay(225);
-    uart_write(lsc);
-        _delay(225);
-}
-
-#endif
+// EOF //

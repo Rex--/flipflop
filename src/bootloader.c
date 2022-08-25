@@ -20,9 +20,6 @@ unsigned char bootloader_command(void);
 void
 bootloader_start (void)
 {
-    RX1PPS = 0x12;  // RX - RC2
-    RC3PPS = 0x0D;  // TX - RC3
-
     // Init UART driver
     uart_init();
 

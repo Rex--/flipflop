@@ -1,9 +1,10 @@
 
-= flip~1~flop~0~
+= flipflop
 
 Flipflop aims to be a _lightweight_ serial __boot__loader for PIC(L)F1919x
 devices. +
-Basic functionality is implemented to the point where it is relatively stable.
+Basic functionality is implemented to the point where it is relatively stable
+at baud rates ranging from 300 to 460k over both 2-wire and 1-wire UART.
 
 Flipflop resides in a section of memory at the beginning of Program Flash
 Memory (PFM). This means the Reset (0x0) and Interrupt (0x4) vectors normally

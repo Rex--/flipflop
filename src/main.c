@@ -21,7 +21,7 @@ void
 main (void)
 {
     // We only start boot loader if RX is high.
-    if (PORTCbits.RC2)
+    if (BOOTLOADER_PIN)
     {
         clock_set();
         bootloader_start();
