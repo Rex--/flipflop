@@ -11,6 +11,9 @@ void uart_init(void)
     UART_TX_PPS_REG = UART_TX_PPS_VAL;
 
     // Configure EUSART1 module.
+#ifdef UART_BAUDRATE    // Setup static baudrate if defined.
+    SP1BRG = (unsigned int)((32000000UL / UART_BAUDRATE) / 4) - 1;
+#endif
     RC1STAbits.SPEN = 1;    // Enable serial port
     RC1STAbits.CREN = 1;    // Enable Continuos Receive (RX)
 #ifndef UART_ONE_WIRE   // Only enable transmit in 2-wire mode
@@ -20,7 +23,6 @@ void uart_init(void)
     TX1STAbits.BRGH = 1;    // Select high speed baudrate
 }
 
-// Sync baudrate generator to incoming RX signal.
 void
 uart_sync (void)
 {
