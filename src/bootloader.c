@@ -23,14 +23,19 @@ bootloader_start (void)
     // Init UART driver
     uart_init();
 
-    // Sync to baudrate
-    uart_sync();
+    while(command_buff[0] != 'U')
+    {
+        // Sync to baudrate
+        uart_sync();
+
+        // Receive second sync U
+        command_buff[0] = uart_read();
+    }
 
     // Transmit Hello
     uart_write('K');
 
     // Wait for command
-    unsigned char command = 0;
     while (1)
     {
         // If byte has been received, assume its a command.

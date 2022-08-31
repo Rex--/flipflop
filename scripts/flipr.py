@@ -2,10 +2,12 @@
 import serial
 import sys
 
-flipflop = serial.Serial('/dev/ttyUSB1', 9600, timeout=1)
+flipflop = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
 
 flipflop.write(b'U')
-print(flipflop.read(1))
+flipflop.read(1)
+flipflop.write(b'U')
+flipflop.read(1)
 resp = flipflop.read(1)
 if resp != b'K':
     flipflop.close()
