@@ -1,5 +1,5 @@
 
-= flipflop
+image::docs/logo-top-grey.png[flipflop]
 
 Flipflop aims to be a _lightweight_ serial __boot__loader for PIC(L)F1919x
 devices. +
