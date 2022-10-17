@@ -1,0 +1,78 @@
+@startuml erase-command
+' mode compact
+scale 10 as 100 pixels
+hide time-axis
+Title: Erase an address/row
+
+compact concise "flipflop" as FF
+compact concise "programmer" as PG
+binary "DATA" as D
+
+D is high
+
+@0
+FF is {hidden}
+PG is {hidden}
+
+@10
+PG is D : Command
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is low
+@+1
+D is high
+
+@20
+PG is ADDRH : Address to erase
+D is {low,high}
+
+@30
+PG is ADDRL
+
+@40
+PG is {hidden}
+FF is K
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is high
+@+1
+D is high
+
+@50
+FF is {hidden}
+PG is "" : Command
+D is {high,low}
+
+highlight 10 to 40 #LightBlue: Erase Command
+highlight 40 to 50 #LightGreen: Response
+highlight 50 to 60 #PaleGoldenRod: Next Command
+
+@enduml

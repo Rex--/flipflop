@@ -1,0 +1,106 @@
+@startuml enter-programming-mode
+' mode compact
+scale 10 as 100 pixels
+hide time-axis
+Title: Enter Programming Mode
+
+compact concise "flipflop" as FF
+compact concise "programmer" as PG
+binary "DATA" as D
+binary "MCLR" as MCLR
+
+MCLR is high
+D is low
+
+@0
+FF is {hidden}
+PG is {hidden}
+
+@2
+MCLR is low
+
+@5
+D is high
+
+@8
+MCLR is high
+
+@10
+FF is {hidden}
+PG is U : Sync Byte
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+
+@20
+FF is {hidden}
+PG is U : Command
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+
+@30
+FF is K
+PG is {hidden}
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is high
+@+1
+D is high
+
+
+@40
+FF is {hidden}
+PG is "" : Command
+
+highlight 10 to 30 #LightBlue: Start Command
+highlight 30 to 40 #LightGreen: Response
+highlight 40 to 50 #PaleGoldenRod: Next Command
+
+@enduml

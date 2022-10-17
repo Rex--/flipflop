@@ -1,0 +1,102 @@
+@startuml write-command
+' mode compact
+scale 10 as 80 pixels
+hide time-axis
+Title: Write Flash Command
+
+compact concise "flipflop" as FF
+compact concise "programmer" as PG
+binary "DATA" as D
+
+D is high
+
+@0
+FF is {hidden}
+PG is {hidden}
+
+@10
+PG is P : Command
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is low
+@+1
+D is low
+@+1
+D is low
+@+1
+D is high
+
+@20
+PG is AddrH : Start address of row
+D is {high,low}
+
+@30
+PG is AddrL
+
+@40
+PG is LenH : Length of data (in bytes)
+
+@50
+PG is LenL
+
+@60
+PG is Byte1H
+
+@70
+PG is Byte1L
+
+@80
+PG is ". . ."
+
+@90
+PG is ByteNH : Last word (2 bytes)
+
+@100
+PG is ByteNL
+FF is {hidden}
+
+
+@110
+FF is K
+PG is {hidden}
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is high
+@+1
+D is high
+
+@120
+FF is {hidden}
+PG is "" : Command
+
+
+
+highlight 10 to 110 #LightBlue: Write Command
+highlight 110 to 120 #LightGreen: Response
+highlight 120 to 130 #PaleGoldenRod: Next Command
+
+@enduml

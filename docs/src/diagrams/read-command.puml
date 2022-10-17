@@ -1,0 +1,71 @@
+@startuml read-command
+' mode compact
+scale 10 as 100 pixels
+hide time-axis
+Title: Read Flash Command
+
+compact concise "flipflop" as FF
+compact concise "programmer" as PG
+binary "DATA" as D
+
+D is high
+
+@0
+FF is {hidden}
+PG is {hidden}
+
+@10
+PG is R : Command
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is low
+@+1
+D is high
+@+1
+D is low
+@+1
+D is high
+
+@20
+PG is ADDRH : Start address
+D is {low,high}
+
+@30
+PG is ADDRL
+
+@40
+PG is LENH : Length to read (in bytes)
+
+@50
+PG is LENL
+
+@60
+FF is BYTE1
+PG is {hidden}
+
+@70
+FF is ". . ."
+
+@80
+FF is BYTEn
+
+@90
+FF is {hidden}
+PG is "" : Command
+D is high
+
+highlight 10 to 60 #LightBlue: Read Command
+highlight 60 to 90 #LightGreen: Response
+highlight 90 to 100 #PaleGoldenRod: Next Command
+
+@enduml
