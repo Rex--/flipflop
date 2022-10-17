@@ -1,3 +1,4 @@
+-include flipflop.cfg
 ################################################################################
 #  |----------|                                                                #
 #  | flipflop |                                                                #
@@ -28,6 +29,9 @@ TARGET_ARCH := -mcpu=$(MCU)#				# Target Arch flag
 CFLAGS := -O2 $(addprefix -I,$(INC_DIR))#	# Options for the compiler
 # Linker options
 LFLAGS := -Wl,-Map=${BUILD_DIR}/${TARGET}.map -mrom=0x0-0x3FF
+# Firmware configuration options
+FWFLAGS := -DPROG_OFFSET=$(PROG_OFFSET) -DBOOTLOADER_PIN=$(BOOTLOADER_EN) \
+	-DUART_RX_PPS_VAL=$(BOOTLOADER_RX) -DUART_TX_PPS_REG=$(BOOTLOADER_TX)
 
 ################################################################################
 #    Match n' Making    #
@@ -44,14 +48,14 @@ AOBJECTS := $(ASOURCES:%=$(BUILD_DIR)/%.o)
 DEPENDS := $(OBJECTS:%.p1=%.d)
 
 # Generate p-code object files from C source files
-$(BUILD_DIR)/%.c.p1: %.c Makefile
+$(BUILD_DIR)/%.c.p1: %.c Makefile flipflop.cfg
 	@mkdir -p $(dir $@)
-	$(CC) $(TARGET_ARCH) $(CFLAGS) -c $< -o $@
+	$(CC) $(TARGET_ARCH) $(CFLAGS) $(FWFLAGS) -c $< -o $@
 
 # Generate object files from assembly source files
-$(BUILD_DIR)/%.S.o: %.S Makefile
+$(BUILD_DIR)/%.S.o: %.S Makefile flipflop.cfg
 	@mkdir -p $(dir $@)
-	$(CC) $(TARGET_ARCH) $(CFLAGS) -c $< -o $@
+	$(CC) $(TARGET_ARCH) $(CFLAGS) $(FWFLAGS) -c $< -o $@
 
 # Generate bin files (.hex and .elf)
 $(BUILD_DIR)/$(TARGET).hex: $(OBJECTS) $(AOBJECTS) Makefile

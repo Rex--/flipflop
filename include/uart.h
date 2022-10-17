@@ -22,8 +22,8 @@
 */
 #undef UART_BAUDRATE
 
-#define UART_RX_PPS_VAL     0x14    // RX Pin selection. PPS Input pin values
-#define UART_TX_PPS_REG     RC4PPS  // TX Pin selection. Output RxyPPS register
+// #define UART_RX_PPS_VAL     0x12    // RX Pin selection. PPS Input pin values
+// #define UART_TX_PPS_REG     RC2PPS  // TX Pin selection. Output RxyPPS register
 
 #define UART_ONE_WIRE       // Define this macro to enable 1-wire mode.
 
@@ -71,6 +71,16 @@ void uart_write(uint8_t data);
  * @returns     Byte of data.
 */
 unsigned char uart_read(void);
+
+/**
+ * Read n-bytes from the UART into a buffer.
+ * 
+ * @param[in]   len     Number of bytes to read.
+ * @param[out]  buff    Buffer to read into.
+ * 
+ * @returns     Number of bytes read, -1 if error.
+*/
+int uart_read_bytes(int len, unsigned char * buff);
 
 // These are default values. They make use of EUSART1. Modifications to the
 // code are needed to change these.

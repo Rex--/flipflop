@@ -90,7 +90,7 @@ uart_deinit (void)
     // TODO: PPS registers
 }
 
-void uart_write(uint8_t data)
+void uart_write(unsigned char data)
 {
 #ifdef UART_ONE_WIRE
     TX1STAbits.TXEN = 1;    // Enable Transmit (TX)
@@ -134,6 +134,20 @@ uart_read (void)
     }
 
     return RC1REG;
+}
+
+int
+uart_read_bytes (int len, unsigned char * buff)
+{
+    for (int data = 0; data < len; data++)
+    {
+        while (!PIR3bits.RC1IF)
+        {
+            CLRWDT();
+        }
+        buff[data] = RC1REG;
+    }
+    return len;
 }
 
 

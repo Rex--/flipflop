@@ -2,7 +2,11 @@
 #ifndef _BOOTLOADER_H_
 #define _BOOTLOADER_H_
 
-#define BOOTLOADER_PIN PORTCbits.RC4
+// If the bootloader strapping pin is left undefined, it defaults to always
+// entering the bootloader after a reset.
+#ifndef BOOTLOADER_PIN
+#   define BOOTLOADER_PIN 1
+#endif
 
 void
 bootloader_start (void);

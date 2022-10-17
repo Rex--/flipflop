@@ -6,8 +6,8 @@
 // NVM unlock sequence. This will set the WR bit and write any data.
 static void nvm_unlock (void);
 
-unsigned int
-nvm_flash_read (unsigned int address)
+int
+nvm_read_words (unsigned int address, int len, unsigned char * buff)
 {
     if (address > 0x7FFF)
     {
@@ -20,19 +20,30 @@ nvm_flash_read (unsigned int address)
         NVMCON1bits.NVMREGS = 0;
     }
 
-    // Load address into NVMADR registers
-    NVMADRH = address >> 8;
-    NVMADRL = address & 0xFF;
+    // Convert # of words to bytes
+    len *= 2;
+    for (int word = 0; word < len; word += 2)
+    {
+        // Load address into NVMADR registers
+        NVMADRH = address >> 8;
+        NVMADRL = address & 0xFF;
 
-    // Set bit to initiate read
-    NVMCON1bits.RD = 1;
+        // Set bit to initiate read
+        NVMCON1bits.RD = 1;
 
-    // Data is available the very next cycle.
-    return (unsigned int)((NVMDATH << 8) | NVMDATL);
+        // Data is available the very next cycle.
+        buff[word] = NVMDATH;
+        buff[word+1] = NVMDATL;
+
+        // Increment address
+        address++;
+    }
+
+    return len;
 }
 
 void
-nvm_flash_row (unsigned int address, unsigned char *row_data)
+nvm_write_row (unsigned int address, unsigned char *row_data)
 {
     // Before writing we have to erase the row
     nvm_flash_erase(address);
@@ -79,7 +90,7 @@ nvm_flash_row (unsigned int address, unsigned char *row_data)
 
 
 void
-nvm_config_write (unsigned int address, unsigned int word)
+nvm_write (unsigned int address, unsigned int word)
 {
     // Set bit to indicate we're writing to config
     NVMCON1bits.NVMREGS = 1;
@@ -109,7 +120,7 @@ nvm_config_write (unsigned int address, unsigned int word)
 }
 
 void
-nvm_flash_erase (unsigned int address)
+nvm_erase (unsigned int address)
 {
     if (address > 0x7FFF)
     {

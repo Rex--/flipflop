@@ -2,12 +2,10 @@
 import serial
 import sys
 
-flipflop = serial.Serial('/dev/ttyUSB0', 9600, timeout=1)
+flipflop = serial.Serial('/dev/ttyUSB1', 500000, timeout=2)
 
-flipflop.write(b'U')
-flipflop.read(1)
-flipflop.write(b'U')
-flipflop.read(1)
+flipflop.write(b'UU')
+flipflop.read(2)
 resp = flipflop.read(1)
 if resp != b'K':
     flipflop.close()
@@ -15,55 +13,46 @@ if resp != b'K':
     sys.exit(1)
 print('Connected to flipflop')
 
-print('Flipping EEPROM byte...', end=' ')
-flipflop.write(b'C')
-flipflop.write(bytes.fromhex('f0 00  00 42'))
+
+#### Write Test ####
+write_addr = 0x500
+write_words = 1000
+write_bytes = write_words * 2
+print(f"Writing { write_bytes } bytes to address: { hex(write_addr) }")
+write_data = bytes([17, 34] * (write_bytes//2))
+print(write_data.hex(" ", 2))
+flipflop.write(b'W') # Write command
+flipflop.write(write_addr.to_bytes(2, 'big'))
+flipflop.write(write_bytes.to_bytes(2, 'big'))
 flipflop.read(5)
 
-resp = flipflop.read(1)
-if resp != b'K':
+flipflop.write(write_data) # Write data
+flipflop.read(write_bytes)
+
+if flipflop.read() != b'K': # Should be K
+    print("Write Failed!")
+    flipflop.write(b'U')
     flipflop.close()
-    print('\nFailed to flip word!')
     sys.exit(1)
-print('success')
+print(f"Successfully wrote {write_bytes} bytes\n")
 
-print('Reading back byte...', end=' ')
+#### Read Test ####
+write_bytes +=2
+print(f"Reading { write_bytes } bytes from { hex(write_addr) }")
 flipflop.write(b'R')
-flipflop.write(bytes.fromhex('f0 00'))
-flipflop.read(3)
-resp = flipflop.read(2)
-print('0x' + resp.hex())
+flipflop.write(write_addr.to_bytes(2, 'big'))
+flipflop.write(write_bytes.to_bytes(2, 'big'))
+flipflop.read(5)
 
-if resp != bytes.fromhex('00 42'):
+resp = flipflop.read(write_bytes)
+if resp == b'E':
+    print("Read failed!\n")
+    flipflop.write(b'U')
     flipflop.close()
-    print('\nFailed to read word!')
     sys.exit(1)
-print('Byte verified')
+print(f"Received { len(list(resp)) } bytes:\n{resp.hex(' ', -2)}\n")
 
-print('Reading application reset vector...', end=' ')
-flipflop.write(b'R')
-flipflop.write(bytes.fromhex('04 00'))
-flipflop.read(3)
-resp = flipflop.read(2)
-print ('0x' + resp.hex())
 
-print('Reading bootloader reset vector...', end=' ')
-flipflop.write(b'R')
-flipflop.write(bytes.fromhex('00 00'))
-flipflop.read(3)
-resp = flipflop.read(2)
-print ('0x' + resp.hex())
-
-# print('Writing row of flash...', end=' ')
-# flipflop.write(b'P')
-# flipflop.write(bytes.fromhex('20 00'))
-# for i in range(64):
-#     flipflop.write(bytes.fromhex('0d bf'))
-# resp = flipflop.read(1)
-# print('success')
-
-input('Press [Enter] to launch user app')
-print('Starting user app')
-flipflop.write(b'X')
-
+# Reset bootloader
+flipflop.write(b'U')
 flipflop.close()

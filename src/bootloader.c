@@ -8,11 +8,14 @@
 #include "uart.h"
 #include "nvm.h"
 
-// Buffer that holds a commmand (1 byte) + its arguments (max 2 bytes).
-static unsigned char command_buff[3];
+// Buffer that holds a commmand (1 byte) + its arguments (max 4 bytes).
+static unsigned char command_buff[4];
 
-// Buffer that holds command data. (max 64words*2bytes/word)
-unsigned char command_data[128];
+// This is based on the amount of ram available. Theres 2KB in a PIC16LF19196
+// which is what is being used to test.
+#define MAX_COMMAND_DATA 2000
+// Buffer that holds command data.
+unsigned char command_data[MAX_COMMAND_DATA];
 
 // Handle a boot loader command
 unsigned char bootloader_command(void);
@@ -50,6 +53,7 @@ bootloader_start (void)
 }
 
 
+#define MAX_ADDR 0xF0FF
 /**
  * Handle a boot loader command.
  * 
@@ -65,11 +69,12 @@ unsigned char
 bootloader_command (void)
 {
     unsigned char ret = 0;
+    unsigned int address;
+    unsigned int data;
+    int length;
 
     switch (command_buff[0])
     {
-    unsigned int address;
-    unsigned int data;
 
     case 'U':   // Reset device
         RESET();
@@ -79,58 +84,95 @@ bootloader_command (void)
         ret = 1;
     break;
 
-    case 'R':   // Read word
-        // 14-bit Address argument (2 bytes)
-        for (char arg = 1; arg < 3; arg++)
+    case 'R':   // Read words
+        // 14-bit Address argument (2 bytes) & Length argument (2 bytes)
+        uart_read_bytes(4, command_buff);
+
+        address = (unsigned int)((command_buff[0] << 8) | command_buff[1]);
+        length = ((command_buff[2] << 8) | command_buff[3]);
+
+        if ((address > MAX_ADDR) || (length > MAX_COMMAND_DATA))
         {
-            command_buff[arg] = uart_read();
+            uart_write('E');
         }
-        data = nvm_flash_read((unsigned int)((command_buff[1] << 8) | command_buff[2]));
-        uart_write((unsigned char)(data >> 8));
-        uart_write((unsigned char)(data & 0xFF));
+        else
+        {
+            // Returns # of bytes read - takes # of words to read
+            length = nvm_read_words(address, (length/2), command_data);
+            for (int resp = 0; resp < length; resp++)
+            {
+                uart_write(command_data[resp]);
+            }
+        }
     break;
 
-    case 'C':   // Write word
-        // 14-bit Address argument (2 bytes)
-        for (char arg = 1; arg < 3; arg++)
+    case 'W':   // Write words
+        // Address argument (2 bytes) & Length argument (2 bytes)
+        uart_read_bytes(4, command_buff);
+
+        // Read <Length> bytes
+        length = ((command_buff[2] << 8) | (command_buff[3]));
+        uart_read_bytes(length, command_data);
+
+        // Read 2 byte checksum
+        // unsigned char checksum_buff[2];
+        // uart_read_bytes(2, checksum_buff);
+
+        // We now have all the data. Next steps:
+
+        // 1. Verify checksum. Don't waste anymore time with bad data.
+            // a. Return 'E' on failed checksum
+
+        // 2. Write data in memory to flash.
+            // a. Determine start row address.
+                // 1a. We could figure this out programmatically somehow
+                // 2a. We could assume the address is the start row address
+            // b. Pad data into rows if necessary.
+            // c. Write row.
+            // d. Verify row.
+                // 1d. Retry write
+                // 2d. Return 'E'
+            // e. Advance to next row in data block.
+            // f. Return 'K'
+        
+        address = (unsigned int)((command_buff[0] << 8) | command_buff[1]);
+
+        // Write to CONFIG/EEPROM if address is out of PFM bounds
+        if (address > 0x7FFF)
         {
-            command_buff[arg] = uart_read();
+            // Only accept write commands to config/eeprom that are 1 word long
+            if (length == 2)
+            {
+                data = (unsigned int)((command_data[0] << 8) | command_data[1]);
+                // write config or eeprom
+                nvm_write(address, data);
+                uart_write('K');
+            }
+            else
+            {
+                uart_write('E');
+            }
         }
-        address = (unsigned int)((command_buff[1] << 8) | command_buff[2]);
 
-        // Word to write (2 bytes)
-        for (char dat = 0; dat < 2; dat++)
+        // Else write to PFM
+        else
         {
-            command_data[dat] = uart_read();
+            // Assume address is the start of a row
+            // Write all of our data one row at a time
+            unsigned char * row_start = command_data;
+            while (length > 0)
+            {
+                nvm_flash_row(address, row_start);
+
+                // Increment address 1 row(64 words), word_start by 64*2 bytes
+                address += 64;
+                row_start += 128;
+
+                // Subtract written data bytes from length
+                length -= 128;
+            }
+            uart_write('K');
         }
-        data = (unsigned int)((command_data[0] << 8) | command_data[1]);
-
-        nvm_config_write(address, data);
-
-        uart_write('K');
-    break;
-
-    case 'P':   // Program row
-        // 14-bit Address argument (2 bytes)
-        for (char arg = 1; arg < 3; arg++)
-        {
-            command_buff[arg] = uart_read();
-        }
-
-        // 64 words of data (128 bytes)
-        for (char dat = 0; dat < 128; dat++)
-        {
-            command_data[dat] = uart_read();
-        }
-
-        // Write row of data
-        address = (unsigned int)((command_buff[1] << 8) | command_buff[2]);
-        nvm_flash_row(address, command_data);
-
-        // Verify Row
-
-        // Return response
-        uart_write('K');
     break;
 
     case 'D':   // Erase row
