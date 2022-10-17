@@ -19,7 +19,7 @@ write_addr = 0x500
 write_words = 1000
 write_bytes = write_words * 2
 print(f"Writing { write_bytes } bytes to address: { hex(write_addr) }")
-write_data = bytes([17, 34] * (write_bytes//2))
+write_data = bytes([0, 0] * (write_bytes//2))
 print(write_data.hex(" ", 2))
 flipflop.write(b'W') # Write command
 flipflop.write(write_addr.to_bytes(2, 'big'))
@@ -37,7 +37,6 @@ if flipflop.read() != b'K': # Should be K
 print(f"Successfully wrote {write_bytes} bytes\n")
 
 #### Read Test ####
-write_bytes +=2
 print(f"Reading { write_bytes } bytes from { hex(write_addr) }")
 flipflop.write(b'R')
 flipflop.write(write_addr.to_bytes(2, 'big'))

@@ -46,7 +46,7 @@ void
 nvm_write_row (unsigned int address, unsigned char *row_data)
 {
     // Before writing we have to erase the row
-    nvm_flash_erase(address);
+    nvm_erase(address);
 
     // Clear bit to indicate we're writing to PFM
     NVMCON1bits.NVMREGS = 0;

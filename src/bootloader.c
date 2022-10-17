@@ -162,7 +162,7 @@ bootloader_command (void)
             unsigned char * row_start = command_data;
             while (length > 0)
             {
-                nvm_flash_row(address, row_start);
+                nvm_write_row(address, row_start);
 
                 // Increment address 1 row(64 words), word_start by 64*2 bytes
                 address += 64;
@@ -177,12 +177,9 @@ bootloader_command (void)
 
     case 'D':   // Erase row
         // Address argument (2 bytes)
-        for (char arg = 1; arg < 3; arg++)
-        {
-            command_buff[arg] = uart_read();
-        }
-        address = (unsigned int)((command_buff[1] << 8) | command_buff[2]);
-        nvm_flash_erase(address);
+        uart_read_bytes(2, command_buff);
+        address = (unsigned int)((command_buff[0] << 8) | command_buff[1]);
+        nvm_erase(address);
         uart_write('K');
     break;
 

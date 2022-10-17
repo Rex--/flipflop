@@ -10,10 +10,6 @@ binary "DATA" as D
 
 D is high
 
-@0
-FF is {hidden}
-PG is {hidden}
-
 @10
 PG is R : Command
 D is low
