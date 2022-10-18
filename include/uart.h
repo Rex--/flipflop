@@ -59,7 +59,7 @@ void uart_sync(void);
  * 
  * @param[in]   data    Byte of data.
 */
-void uart_write(uint8_t data);
+void uart_write(unsigned char data);
 
 /**
  * Read a byte of data from the UART.

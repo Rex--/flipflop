@@ -2,7 +2,7 @@
 ' mode compact
 scale 10 as 80 pixels
 hide time-axis
-Title: Write Flash Command
+Title: Write Flash Command (2-byte words)
 
 compact concise "flipflop" as FF
 compact concise "programmer" as PG
@@ -33,36 +33,25 @@ D is low
 D is high
 
 @20
-PG is AddrH : Start address of row
+PG is "AddrH : AddrL" : Start address of row
 D is {high,low}
 
-@30
-PG is AddrL
-
 @40
-PG is LenH : Length of data (in bytes)
-
-@50
-PG is LenL
+PG is "LenH : LenL" : Length of data (in bytes)
 
 @60
-PG is Byte1H
-
-@70
-PG is Byte1L
+PG is "Word0H : Word0L" : Word written to address
 
 @80
 PG is ". . ."
 
 @90
-PG is ByteNH : Last word (2 bytes)
-
-@100
-PG is ByteNL
-FF is {hidden}
-
+PG is "WordNH : WordNL" : Last word
 
 @110
+PG is "CRC-16" : 2 byte checksum
+
+@130
 FF is K
 PG is {hidden}
 D is low
@@ -85,14 +74,14 @@ D is high
 @+1
 D is high
 
-@120
+@140
 FF is {hidden}
 PG is "" : Command
 
 
 
-highlight 10 to 110 #LightBlue: Write Command
-highlight 110 to 120 #LightGreen: Response
-highlight 120 to 130 #PaleGoldenRod: Next Command
+highlight 10 to 130 #LightBlue: Write Command
+highlight 130 to 140 #LightGreen: Response
+highlight 140 to 150 #PaleGoldenRod: Next Command
 
 @enduml

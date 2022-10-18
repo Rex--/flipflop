@@ -2,7 +2,7 @@
 ' mode compact
 scale 10 as 100 pixels
 hide time-axis
-Title: Read Flash Command
+Title: Read Flash Command (2 byte words)
 
 compact concise "flipflop" as FF
 compact concise "programmer" as PG
@@ -33,35 +33,32 @@ D is low
 D is high
 
 @20
-PG is ADDRH : Start address
+PG is "AddrH : AddrL" : Start address
 D is {low,high}
 
-@30
-PG is ADDRL
-
 @40
-PG is LENH : Length to read (in bytes)
-
-@50
-PG is LENL
+PG is "LenH : LenL" : Length to read (in bytes)
 
 @60
-FF is BYTE1
+FF is "Word0H:Word0L" : Word at address
 PG is {hidden}
 
-@70
+@80
 FF is ". . ."
 
-@80
-FF is BYTEn
-
 @90
+FF is "WordNH : WordNL" : Address + (Length/2) - 1
+
+@110
+FF is "CRC-16" : 2 byte checksum
+
+@130
 FF is {hidden}
 PG is "" : Command
 D is high
 
 highlight 10 to 60 #LightBlue: Read Command
-highlight 60 to 90 #LightGreen: Response
-highlight 90 to 100 #PaleGoldenRod: Next Command
+highlight 60 to 130 #LightGreen: Response
+highlight 130 to 140 #PaleGoldenRod: Next Command
 
 @enduml

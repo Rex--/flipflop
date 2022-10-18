@@ -33,11 +33,8 @@ D is low
 D is high
 
 @20
-PG is ADDRH : Address to erase
+PG is "AddrH : AddrL" : Address to erase
 D is {low,high}
-
-@30
-PG is ADDRL
 
 @40
 PG is {hidden}

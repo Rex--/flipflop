@@ -7,6 +7,7 @@
 #include "bootloader.h"
 #include "uart.h"
 #include "nvm.h"
+#include "crc.h"
 
 // Buffer that holds a commmand (1 byte) + its arguments (max 4 bytes).
 static unsigned char command_buff[4];
@@ -99,10 +100,18 @@ bootloader_command (void)
         {
             // Returns # of bytes read - takes # of words to read
             length = nvm_read_words(address, (length/2), command_data);
+
+            // Compute a crc of the data
+            data = crc_crc16(command_data, length);
+
+            // Write data
             for (int resp = 0; resp < length; resp++)
             {
                 uart_write(command_data[resp]);
             }
+            // Write CRC
+            uart_write(data >> 8);
+            uart_write(data & 0xFF);
         }
     break;
 
@@ -110,13 +119,9 @@ bootloader_command (void)
         // Address argument (2 bytes) & Length argument (2 bytes)
         uart_read_bytes(4, command_buff);
 
-        // Read <Length> bytes
-        length = ((command_buff[2] << 8) | (command_buff[3]));
+        // Read <Length> bytes + 2 byte checksum
+        length = ((command_buff[2] << 8) | (command_buff[3])) + 2;
         uart_read_bytes(length, command_data);
-
-        // Read 2 byte checksum
-        // unsigned char checksum_buff[2];
-        // uart_read_bytes(2, checksum_buff);
 
         // We now have all the data. Next steps:
 
@@ -134,6 +139,15 @@ bootloader_command (void)
                 // 2d. Return 'E'
             // e. Advance to next row in data block.
             // f. Return 'K'
+        
+        data = crc_crc16(command_data, length);
+
+        if (data)
+        {
+            // Checksum verification failed. Return E and break
+            uart_write('E');
+            break;
+        }
         
         address = (unsigned int)((command_buff[0] << 8) | command_buff[1]);
 
