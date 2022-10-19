@@ -11,7 +11,7 @@ binary "DATA" as D
 D is high
 
 @10
-PG is P : Command
+PG is W : Command
 D is low
 @+1
 D is low
@@ -24,11 +24,11 @@ D is high
 @+1
 D is low
 @+1
-D is low
+D is high
 @+1
-D is low
+D is high
 @+1
-D is low
+D is high
 @+1
 D is high
 

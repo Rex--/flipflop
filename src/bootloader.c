@@ -13,8 +13,8 @@
 static unsigned char command_buff[4];
 
 // This is based on the amount of ram available. Theres 2KB in a PIC16LF19196
-// which is what is being used to test.
-#define MAX_COMMAND_DATA 2000
+// which is what is being used to test. We need 2 additional bytes for a 16-bit CRC
+#define MAX_COMMAND_DATA 2002
 // Buffer that holds command data.
 unsigned char command_data[MAX_COMMAND_DATA];
 
@@ -69,7 +69,6 @@ bootloader_start (void)
 unsigned char
 bootloader_command (void)
 {
-    unsigned char ret = 0;
     unsigned int address;
     unsigned int data;
     int length;
@@ -82,7 +81,7 @@ bootloader_command (void)
     break;
 
     case 'X':   // Start user app
-        ret = 1;
+        return 1;
     break;
 
     case 'R':   // Read words
@@ -120,8 +119,8 @@ bootloader_command (void)
         uart_read_bytes(4, command_buff);
 
         // Read <Length> bytes + 2 byte checksum
-        length = ((command_buff[2] << 8) | (command_buff[3])) + 2;
-        uart_read_bytes(length, command_data);
+        length = ((command_buff[2] << 8) | (command_buff[3]));
+        uart_read_bytes(length+2, command_data);
 
         // We now have all the data. Next steps:
 
@@ -140,12 +139,12 @@ bootloader_command (void)
             // e. Advance to next row in data block.
             // f. Return 'K'
         
-        data = crc_crc16(command_data, length);
+        data = crc_crc16(command_data, length+2);
 
         if (data)
         {
-            // Checksum verification failed. Return E and break
-            uart_write('E');
+            // Checksum verification failed. Return F and break
+            uart_write('F');
             break;
         }
         
@@ -202,7 +201,7 @@ bootloader_command (void)
     break;
     }
 
-    return ret;
+    return 0;
 }
 
 // EOF //
