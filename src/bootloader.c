@@ -14,7 +14,7 @@ static unsigned char command_buff[4];
 
 // This is based on the amount of ram available. Theres 2KB in a PIC16LF19196
 // which is what is being used to test. We need 2 additional bytes for a 16-bit CRC
-#define MAX_COMMAND_DATA 2002
+#define MAX_COMMAND_DATA 2048
 // Buffer that holds command data.
 unsigned char command_data[MAX_COMMAND_DATA];
 
@@ -42,6 +42,7 @@ bootloader_start (void)
     // Wait for command
     while (1)
     {
+        CLRWDT();
         // If byte has been received, assume its a command.
         command_buff[0] = uart_read();
         if (bootloader_command())
@@ -63,8 +64,8 @@ bootloader_start (void)
  * necessary arguments to the command, if needed. It will store these in the
  * command buffer.
  * 
- * Returns 1 if the command doesn't exist,
- * 0 on success.
+ * Returns 1 to break out of command loop,
+ * 0 to handle the next command.
 */
 unsigned char
 bootloader_command (void)
@@ -125,7 +126,7 @@ bootloader_command (void)
         // We now have all the data. Next steps:
 
         // 1. Verify checksum. Don't waste anymore time with bad data.
-            // a. Return 'E' on failed checksum
+            // a. Return 'F' on failed checksum
 
         // 2. Write data in memory to flash.
             // a. Determine start row address.

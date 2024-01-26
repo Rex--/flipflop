@@ -2,12 +2,13 @@
 #ifndef _BOOTLOADER_H_
 #define _BOOTLOADER_H_
 
-// If the bootloader strapping pin is left undefined, it defaults to always
-// entering the bootloader after a reset.
-#ifndef BOOTLOADER_PIN
-#   define BOOTLOADER_PIN 1
-#endif
-
+/**
+ * Start the bootloader.
+ * This starts the main commmand loop of the bootloader which receives a
+ * command, then executes it. This function will only return when the command
+ * to start the user application is received. Otherwise, the watchdog timeout
+ * will cause a reset.
+*/
 void
 bootloader_start (void);
 

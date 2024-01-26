@@ -9,7 +9,7 @@
 TARGET := flipflop
 
 ## The device to compile for
-MCU := 16LF19196
+MCU := 16LF19197
 
 ## Source code directories (separated by a space)
 SRC_DIR := src
@@ -19,6 +19,9 @@ INC_DIR := include
 
 ## Build files directory
 BUILD_DIR := build
+
+## Docs directory
+DOCS_DIR := docs
 
 ################################################################################
 #    Compiler Setup   #
@@ -30,7 +33,7 @@ CFLAGS := -O2 $(addprefix -I,$(INC_DIR))#	# Options for the compiler
 # Linker options
 LFLAGS := -Wl,-Map=${BUILD_DIR}/${TARGET}.map -mrom=0x0-0x3FF
 # Firmware configuration options
-FWFLAGS := -DPROG_OFFSET=$(PROG_OFFSET) -DBOOTLOADER_PIN=$(BOOTLOADER_EN) \
+FWFLAGS := -DPROG_OFFSET=$(PROG_OFFSET) \
 	-DUART_RX_PPS_VAL=$(BOOTLOADER_RX) -DUART_TX_PPS_REG=$(BOOTLOADER_TX)
 
 ################################################################################
@@ -61,7 +64,7 @@ $(BUILD_DIR)/%.S.o: %.S Makefile flipflop.cfg
 $(BUILD_DIR)/$(TARGET).hex: $(OBJECTS) $(AOBJECTS) Makefile
 	$(CC) $(TARGET_ARCH) $(CFLAGS) ${LFLAGS} $(OBJECTS) $(AOBJECTS) -o $@
 
-.PHONY: all info clean fclean
+.PHONY: all info clean fclean docs
 
 all: $(BUILD_DIR)/$(TARGET).hex
 
@@ -73,6 +76,14 @@ clean:
 
 fclean:
 	rm -rf build
+
+docs:
+	plantuml -o "../../diagrams/" -tpng docs/src/diagrams/*.puml
+	asciidoctor -D docs/ docs/src/*.adoc
+
+cleandocs:
+	rm -r docs/diagrams/
+	rm docs/*.html
 
 info:
 	@echo
