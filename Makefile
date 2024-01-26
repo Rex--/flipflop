@@ -34,7 +34,7 @@ CFLAGS := -O2 $(addprefix -I,$(INC_DIR))#	# Options for the compiler
 LFLAGS := -Wl,-Map=${BUILD_DIR}/${TARGET}.map -mrom=0x0-0x3FF
 # Firmware configuration options
 FWFLAGS := -DPROG_OFFSET=$(PROG_OFFSET) \
-	-DUART_RX_PPS_VAL=$(BOOTLOADER_RX) -DUART_TX_PPS_REG=$(BOOTLOADER_TX)
+	-DUART_RX_PPS_VAL=$(UART_RX) -DUART_TX_PPS_REG=$(UART_TX)
 
 ################################################################################
 #    Match n' Making    #
