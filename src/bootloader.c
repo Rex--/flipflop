@@ -197,6 +197,12 @@ bootloader_command (void)
         uart_write('K');
     break;
 
+    case 'V': // Bootloader version
+        uart_write('0');
+        uart_write('1');
+        uart_write('0');
+    break;
+
     default:    // Unknown command
         uart_write('?'); // Return question mark
     break;

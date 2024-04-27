@@ -61,12 +61,18 @@ $(BUILD_DIR)/%.S.o: %.S Makefile flipflop.cfg
 	$(CC) $(TARGET_ARCH) $(CFLAGS) $(FWFLAGS) -c $< -o $@
 
 # Generate bin files (.hex and .elf)
-$(BUILD_DIR)/$(TARGET).hex: $(OBJECTS) $(AOBJECTS) Makefile
-	$(CC) $(TARGET_ARCH) $(CFLAGS) ${LFLAGS} $(OBJECTS) $(AOBJECTS) -o $@
+$(BUILD_DIR)/%.hex: $(OBJECTS) $(AOBJECTS) Makefile
+	$(CC) $(TARGET_ARCH) $(CFLAGS) $(LFLAGS) $(OBJECTS) $(AOBJECTS) -o $@
 
-.PHONY: all info clean fclean docs
+.PHONY: all flipflop flipflop-update flipflop-update-flags info clean fclean docs
 
-all: $(BUILD_DIR)/$(TARGET).hex
+flipflop: $(BUILD_DIR)/$(TARGET).hex
+
+all: flipflop flipflop-update
+
+flipflop-update: flipflop-update-flags $(BUILD_DIR)/$(TARGET)_update.hex
+flipflop-update-flags:
+	$(eval LFLAGS := -Wl,-Map=$(BUILD_DIR)/$(TARGET)_update.map -mrom=0x400-0x7FF -mcodeoffset=0x400)
 
 clean:
 	rm -f $(OBJECTS)
